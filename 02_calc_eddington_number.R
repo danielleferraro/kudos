@@ -1,5 +1,5 @@
 #' ::::::::::::::::::::::::::::::::::::::::::
-#' Script name: eddington_number.R
+#' Script name: calc_eddington_number.R
 #' Author: Danielle Ferraro
 #' Date: 2025-10-24
 #' Purpose:
@@ -21,55 +21,54 @@ library(tidyverse)
 # source(here("pull_data.R")) # Pull latest data & overwrite file
 activs <- read_csv(here("activs.csv"))
 
-head(activs)
-names(activs)
-
 # Distances are in km, convert to miles
 hist(activs$distance[activs$sport_type == "Ride"], breaks = 20)
 activs$distance <- activs$distance * 0.62137119
 
 #### Calculate E ####
 
-rides <- subset(activs, sport_type == "Ride")
+# Summarize mileage per day because E is based on # days, not # rides
+daily_mileage <- activs |>
+  filter(sport_type == "Ride") |>
+  mutate(date = floor_date(start_date_local, unit = "day")) |>
+  group_by(date) |>
+  summarize(distance = sum(distance, na.rm = TRUE)) |>
+  ungroup()
 
-# Current
-desc_dist <- sort(rides$distance, decreasing = TRUE)
-current_E <- max(desc_dist[seq_along(desc_dist) > desc_dist])
+# Current E (rounding down)
+desc_dist <- sort(daily_mileage$distance, decreasing = TRUE)
+current_E <- max(which(desc_dist >= seq_along(desc_dist)))
 
-# Over time
-
-eddington_summary <- function(distances, goal_E = E + 1) {
-  distances <- sort(distances, decreasing = TRUE)
-  n <- length(distances)
-
-  # Calculate E
-  E <- sum(distances >= seq_len(n))
+# E over time: given a vector of distances, calculate current E 
+# and how many more days @ goal E mileage needed to reach goal E
+eddington_summary <- function(distances, goal_E = current_E + 1) {
+  
+  # Current E
+  desc_dist <- sort(distances, decreasing = TRUE)
+  current_E <- max(which(desc_dist >= seq_along(desc_dist)))
 
   # How many more rides to reach goal E
-  next_target <- goal_E
-  rides_over_next <- sum(distances >= next_target)
-  needed_for_next <- next_target - rides_over_next
-
-  # Return dataframe
   out <- tibble(
-    E = E,
-    next_target = next_target,
-    rides_over_next = rides_over_next,
-    needed_for_next = needed_for_next
+    E = current_E,
+    next_target = goal_E,
+    rides_over_next = sum(distances >= goal_E),
+    needed_for_next = goal_E - rides_over_next
   )
-
+  
+  # Return dataframe
   return(out)
 }
 
-# Only 33 :(
-eddington_summary(rides$distance)
+# My current stats
+eddington_summary(daily_mileage$distance)
 
-rides_E <- rides |>
-  arrange(start_date_local) |>
+# Append E over time to mileage dataframe
+daily_mileage_E <- daily_mileage |>
+  arrange(date) |>
   mutate(
-    E = map(
+    E = map_dbl(
       .x = seq_along(distance),
-      .f = ~ eddington_summary(distance[1:.x])$E
+      .f = ~eddington_summary(distance[1:.x])$E
     )
   )
 
@@ -78,12 +77,12 @@ rides_E <- rides |>
 col <- "aquamarine4"
 
 # E over time
-ggplot(data = rides_E, aes(x = start_date_local, y = as.numeric(E))) +
+ggplot(data = daily_mileage_E, aes(x = date, y = E)) +
   geom_line(color = col) +
   geom_hline(yintercept = current_E, linetype = "dashed") +
   annotate(
     geom = "text",
-    x = mean(rides_E$start_date_local),
+    x = mean(daily_mileage_E$date),
     y = current_E + 2,
     label = paste0("Current E = ", floor(current_E))
   ) +
@@ -92,15 +91,15 @@ ggplot(data = rides_E, aes(x = start_date_local, y = as.numeric(E))) +
   scale_y_continuous(n.breaks = 7, expand = expansion(mult = c(0, 0.1))) +
   cowplot::theme_minimal_hgrid()
 
-# Frequency 
-freq_data <- map(.x = 1:50, ~ eddington_summary(rides$distance, goal_E = .x)) |>
+# Min number of days @ mileage per E, vs. my data
+freq_data <- map(.x = 1:50, ~ eddington_summary(daily_mileage$distance, goal_E = .x)) |>
   bind_rows()
 
 ggplot(freq_data, aes(x = next_target, y = rides_over_next)) +
   geom_col(fill = "darkred") +
   gghighlight::gghighlight(next_target == floor(current_E), unhighlighted_params = list(fill = col)) +
   geom_abline(slope = 1, intercept = 0, color = "darkred") +
-  labs(x = "Eddington number", y = "Number of rides") +
+  labs(x = "Eddington number", y = "Number of days") +
   scale_y_continuous(n.breaks = 7, expand = expansion(mult = c(0, 0.1))) +
   cowplot::theme_minimal_hgrid()
 
