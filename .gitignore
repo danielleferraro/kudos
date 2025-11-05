@@ -51,3 +51,6 @@ rsconnect/
 # Strava API token and data
 key.R
 data/
+
+# 
+.DS_Store
