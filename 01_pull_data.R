@@ -6,13 +6,17 @@
 #' Pull activity data with Strava API and save to CSV
 #' ::::::::::::::::::::::::::::::::::::::::::
 #' Notes:
-#' Requires Strava API token, which can be generated
-#' following Sam's helpful instructions here: 
+#' Requires Strava API token saved at "key.R", which can 
+#' be generated following Sam's helpful instructions here: 
 #' https://github.com/samanthacsik/strava-dashboard/wiki/Creating-a-Strava-API-Application-&-authentication
+#' 
+#' Output: data/activs.csv
+#' data/ is added to .gitignore (not tracked with git)
 #' ::::::::::::::::::::::::::::::::::::::::::
 
 # Load package and my API token
 library(rStrava)
+library(here)
 source("key.R")
 
 # Pull data and convert to dataframe
@@ -20,4 +24,4 @@ activs_raw <- get_activity_list(stoken = my_token)
 activs <- compile_activities(activs_raw) 
 
 # Save
-write.csv(activs, "activs.csv", row.names = FALSE)
+write.csv(activs, here("data", "activs.csv"), row.names = FALSE)

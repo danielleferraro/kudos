@@ -8,7 +8,8 @@
 #' at least E miles on at least E days.
 #' ::::::::::::::::::::::::::::::::::::::::::
 #' Notes:
-#'
+#' This script assumes my Strava data are stored
+#' at data/activs.csv
 #' ::::::::::::::::::::::::::::::::::::::::::
 
 #### Setup ####
@@ -19,7 +20,7 @@ library(tidyverse)
 #### Load data ####
 
 # source(here("pull_data.R")) # Pull latest data & overwrite file
-activs <- read_csv(here("activs.csv"))
+activs <- read_csv(here("data", "activs.csv")) # Read in existing data
 
 # Distances are in km, convert to miles
 hist(activs$distance[activs$sport_type == "Ride"], breaks = 20)

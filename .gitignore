@@ -48,6 +48,6 @@ po/*~
 # RStudio Connect folder
 rsconnect/
 
-# Strava data
+# Strava API token and data
 key.R
-activs.csv
+data/
