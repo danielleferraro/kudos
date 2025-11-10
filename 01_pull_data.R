@@ -10,8 +10,8 @@
 #' be generated following Sam's helpful instructions here: 
 #' https://github.com/samanthacsik/strava-dashboard/wiki/Creating-a-Strava-API-Application-&-authentication
 #' 
-#' Output: data/activs.csv
-#' data/ is added to .gitignore (not tracked with git)
+#' Output: data/raw/activs.csv
+#' data/raw/ is added to .gitignore (not tracked with git)
 #' ::::::::::::::::::::::::::::::::::::::::::
 
 # Load package and my API token
@@ -24,4 +24,4 @@ activs_raw <- get_activity_list(stoken = my_token)
 activs <- compile_activities(activs_raw) 
 
 # Save
-write.csv(activs, here("data", "activs.csv"), row.names = FALSE)
+write.csv(activs, here("data", "raw", "activs.csv"), row.names = FALSE)
