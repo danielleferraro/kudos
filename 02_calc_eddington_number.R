@@ -36,32 +36,11 @@ daily_mileage <- activs |>
   summarize(distance = sum(distance, na.rm = TRUE)) |>
   ungroup()
 
-# Current E (rounding down)
-desc_dist <- sort(daily_mileage$distance, decreasing = TRUE)
-current_E <- max(which(desc_dist >= seq_along(desc_dist)))
-
-# E over time: given a vector of distances, calculate current E 
-# and how many more days @ goal E mileage needed to reach goal E
-eddington_summary <- function(distances, goal_E = current_E + 1) {
-  
-  # Current E
-  desc_dist <- sort(distances, decreasing = TRUE)
-  current_E <- max(which(desc_dist >= seq_along(desc_dist)))
-
-  # How many more rides to reach goal E
-  out <- tibble(
-    E = current_E,
-    next_target = goal_E,
-    rides_over_next = sum(distances >= goal_E),
-    needed_for_next = goal_E - rides_over_next
-  )
-  
-  # Return dataframe
-  return(out)
-}
+# Load E function
+source(here("get_eddington_summary.R"))
 
 # My current stats
-eddington_summary(daily_mileage$distance)
+get_eddington_summary(daily_mileage$distance)
 
 # Append E over time to mileage dataframe
 daily_mileage_E <- daily_mileage |>
