@@ -1,5 +1,5 @@
 #' ::::::::::::::::::::::::::::::::::::::::::
-#' Script name: clean_friends_data.R
+#' Script name: 02_clean_friends_data.R
 #' Author: Danielle Ferraro
 #' Date: 2025-11-07
 #' Purpose:
